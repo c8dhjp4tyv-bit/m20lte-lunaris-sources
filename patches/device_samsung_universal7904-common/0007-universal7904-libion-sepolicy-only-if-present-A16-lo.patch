@@ -1,0 +1,26 @@
+From f391b1759ad59babf48655c006ce0db79fe32af0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?= <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 21:02:23 +0000
+Subject: [PATCH 7/8] universal7904: libion sepolicy only if present (A16
+ local)
+
+---
+ BoardConfigCommon.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index f1e0823..d79acfb 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -104,7 +104,7 @@ ENABLE_VENDOR_RIL_SERVICE := true
+ # Sepolicy
+ ifneq ($(LINEAGE_BUILD),)
+ include device/lineage/sepolicy/exynos/sepolicy.mk
+-include device/lineage/sepolicy/libion/sepolicy.mk
++-include device/lineage/sepolicy/libion/sepolicy.mk
+ endif
+ include device/samsung_slsi/sepolicy/sepolicy.mk
+ BOARD_VENDOR_SEPOLICY_DIRS += $(COMMON_PATH)/sepolicy/vendor
+-- 
+2.43.0
+

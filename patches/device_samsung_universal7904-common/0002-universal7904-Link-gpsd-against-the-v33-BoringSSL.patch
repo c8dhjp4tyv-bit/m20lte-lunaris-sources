@@ -1,0 +1,51 @@
+From 91706fcdcf680fd13124470918eab724d1883f80 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 02:31:55 +0300
+Subject: [PATCH 2/8] universal7904: Link gpsd against the v33 BoringSSL
+
+gpsd crashed in X509_verify_cert during SUPL TLS with the Android 17
+libcrypto, restarting the GNSS session before a fix.
+
+Depends-on: libssl-v33 in hardware/lineage/compat
+
+Assisted-by: LLM
+Change-Id: I602b5091fe61ca24374eeeddbaf9ea02a4caeab5
+---
+ extract-files.sh        | 4 ++++
+ universal7904-common.mk | 4 +++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/extract-files.sh b/extract-files.sh
+index 5bb189e..1b0aa2b 100755
+--- a/extract-files.sh
++++ b/extract-files.sh
+@@ -35,6 +35,10 @@ function blob_fixup {
+ 	vendor/lib64/hw/vendor.samsung.hardware.gnss@2.0-impl.so)
+ 		"$PATCHELF" --remove-needed libhwbinder.so "$2"
+ 		;;
++	vendor/bin/hw/gpsd)
++		"$PATCHELF" --replace-needed libssl.so libssl-v33.so "$2"
++		"$PATCHELF" --replace-needed libcrypto.so libcrypto-v33.so "$2"
++		;;
+ 	vendor/lib64/libkeymaster_helper_vendor.so)
+ 		add_needed_if_missing libshim_keymaster.so "$2"
+ 		;;
+diff --git a/universal7904-common.mk b/universal7904-common.mk
+index 053c15b..9a58398 100644
+--- a/universal7904-common.mk
++++ b/universal7904-common.mk
+@@ -82,7 +82,9 @@ PRODUCT_PACKAGES += \
+ # GPS
+ PRODUCT_PACKAGES += \
+     android.frameworks.sensorservice@1.0.vendor \
+-    android.hardware.gnss@2.1.vendor
++    android.hardware.gnss@2.1.vendor \
++    libcrypto-v33 \
++    libssl-v33
+ 
+ # Graphics
+ PRODUCT_PACKAGES += \
+-- 
+2.43.0
+

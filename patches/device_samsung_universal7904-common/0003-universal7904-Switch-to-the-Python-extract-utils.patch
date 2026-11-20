@@ -1,0 +1,336 @@
+From d71f4e0e933e8fc227fa91cb638f2c240f305c3c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 09:57:30 +0300
+Subject: [PATCH 3/8] universal7904: Switch to the Python extract-utils
+
+lineage-24.0 dropped extract_utils.sh. Port the blob fixups to
+extract-files.py.
+
+Assisted-by: LLM
+Change-Id: Ie7dbfc42a2b9490ded5b7ef47cc5c684eb6f8184
+---
+ extract-files.py   |  78 ++++++++++++++++++++++++
+ extract-files.sh   | 147 ---------------------------------------------
+ setup-makefiles.py |   5 ++
+ setup-makefiles.sh |  57 ------------------
+ 4 files changed, 83 insertions(+), 204 deletions(-)
+ create mode 100755 extract-files.py
+ delete mode 100755 extract-files.sh
+ create mode 100755 setup-makefiles.py
+ delete mode 100755 setup-makefiles.sh
+
+diff --git a/extract-files.py b/extract-files.py
+new file mode 100755
+index 0000000..130cfaa
+--- /dev/null
++++ b/extract-files.py
+@@ -0,0 +1,78 @@
++#!/usr/bin/env -S PYTHONPATH=../../../tools/extract-utils python3
++#
++# SPDX-FileCopyrightText: The LineageOS Project
++# SPDX-License-Identifier: Apache-2.0
++#
++
++from extract_utils.fixups_blob import (
++    blob_fixup,
++    blob_fixups_user_type,
++)
++from extract_utils.fixups_lib import (
++    lib_fixup_vendorcompat,
++    lib_fixups_user_type,
++    libs_proto_3_9_1,
++)
++from extract_utils.main import (
++    ExtractUtils,
++    ExtractUtilsModule,
++)
++
++namespace_imports = [
++    'device/samsung/universal7904-common',
++    'hardware/samsung',
++    'hardware/samsung_slsi-linaro/exynos',
++    'hardware/samsung_slsi-linaro/graphics',
++]
++
++lib_fixups: lib_fixups_user_type = {
++    libs_proto_3_9_1: lib_fixup_vendorcompat,
++}
++
++blob_fixups: blob_fixups_user_type = {
++    'vendor/bin/hw/gpsd': blob_fixup()
++        .replace_needed('libssl.so', 'libssl-v33.so')
++        .replace_needed('libcrypto.so', 'libcrypto-v33.so'),
++    (
++        'vendor/bin/hw/rild',
++        'vendor/lib64/libsec-ril-dsds.so',
++        'vendor/lib64/libsec-ril.so',
++    ): blob_fixup()
++        .replace_needed('libril.so', 'libril-samsung.so'),
++    'vendor/lib/hw/audio.primary.exynos7904.so': blob_fixup()
++        .replace_needed('libaudioroute.so', 'libaudioroute.universal7904.so')
++        .replace_needed('libtinyalsa.so', 'libtinyalsa.universal7904.so')
++        .add_needed('libshim_audioparams.so')
++        .binary_regex_replace(b'str_parms_get_str', b'str_parms_get_mod'),
++    (
++        'vendor/lib/lib_SamsungRec_07010.so',
++        'vendor/lib/lib_SoundAlive_SRC384_ver320.so',
++    ): blob_fixup()
++        .add_needed('libc++.so'),
++    (
++        'vendor/lib/libaudio_soundtrigger.so',
++        'vendor/lib/libaudioroute.universal7904.so',
++        'vendor/lib/soundfx/libaudioeffectoffload.so',
++    ): blob_fixup()
++        .replace_needed('libtinyalsa.so', 'libtinyalsa.universal7904.so'),
++    (
++        'vendor/lib/libwvhidl.so',
++        'vendor/lib/mediadrm/libwvdrmengine.so',
++    ): blob_fixup()
++        .replace_needed('libprotobuf-cpp-lite-3.9.1.so', 'libprotobuf-cpp-full-3.9.1.so')
++        .add_needed('libcrypto_shim.so'),
++    'vendor/lib64/hw/vendor.samsung.hardware.gnss@2.0-impl.so': blob_fixup()
++        .remove_needed('libhwbinder.so'),
++}  # fmt: skip
++
++module = ExtractUtilsModule(
++    'universal7904-common',
++    'samsung',
++    blob_fixups=blob_fixups,
++    lib_fixups=lib_fixups,
++    namespace_imports=namespace_imports,
++)
++
++if __name__ == '__main__':
++    utils = ExtractUtils.device(module)
++    utils.run()
+diff --git a/extract-files.sh b/extract-files.sh
+deleted file mode 100755
+index 1b0aa2b..0000000
+--- a/extract-files.sh
++++ /dev/null
+@@ -1,147 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (C) 2017-2020 The LineageOS Project
+-#
+-# SPDX-License-Identifier: Apache-2.0
+-#
+-
+-set -e
+-
+-# patchelf 0.9 breaks the GNSS HALs on --set-soname
+-export PATCHELF_VERSION=0_17_2
+-
+-# Load extract_utils and do some sanity checks
+-MY_DIR="${BASH_SOURCE%/*}"
+-if [[ ! -d ${MY_DIR} ]]; then MY_DIR="${PWD}"; fi
+-
+-LINEAGE_ROOT="${MY_DIR}"/../../..
+-
+-HELPER="${LINEAGE_ROOT}/tools/extract-utils/extract_utils.sh"
+-if [ ! -f "${HELPER}" ]; then
+-	echo "Unable to find helper script at ${HELPER}"
+-	exit 1
+-fi
+-source "${HELPER}"
+-
+-function add_needed_if_missing {
+-	"$PATCHELF" --print-needed "$2" | grep -Fxq "$1" || "$PATCHELF" --add-needed "$1" "$2"
+-}
+-
+-function blob_fixup {
+-	case "$1" in
+-	vendor/lib64/libOpenCv.camera.samsung.so)
+-		add_needed_if_missing libcomparetf2_shim.so "$2"
+-		;;
+-	vendor/lib64/hw/vendor.samsung.hardware.gnss@2.0-impl.so)
+-		"$PATCHELF" --remove-needed libhwbinder.so "$2"
+-		;;
+-	vendor/bin/hw/gpsd)
+-		"$PATCHELF" --replace-needed libssl.so libssl-v33.so "$2"
+-		"$PATCHELF" --replace-needed libcrypto.so libcrypto-v33.so "$2"
+-		;;
+-	vendor/lib64/libkeymaster_helper_vendor.so)
+-		add_needed_if_missing libshim_keymaster.so "$2"
+-		;;
+-	vendor/lib/lib_SamsungRec_07010.so | vendor/lib/lib_SoundAlive_SRC384_ver320.so)
+-		add_needed_if_missing libc++.so "$2"
+-		;;
+-	vendor/lib64/libhifills.so)
+-		grep -q libunwindstack.so "$2" || "$PATCHELF" --add-needed "libunwindstack.so" "$2"
+-		grep -q libdemangle.so "$2" || "$PATCHELF" --add-needed "libdemangle.so" "$2"
+-		;;
+-	vendor/lib*/hw/camera.exynos7904.so)
+-		"$PATCHELF" --replace-needed "libcamera_client.so" "libcamera_metadata_helper.so" "$2"
+-		;;
+-	vendor/lib*/libexynoscamera.so | vendor/lib*/libexynoscamera3.so)
+-		"$PATCHELF" --remove-needed "libcamera_client.so" "$2"
+-		add_needed_if_missing libcamera_metadata_helper.so "$2"
+-		if [[ "$1" == */libexynoscamera.so ]]; then
+-			add_needed_if_missing libgui.so "$2"
+-		else
+-			"$PATCHELF" --remove-needed "libgui.so" "$2"
+-			add_needed_if_missing libshim_fdsan.so "$2"
+-			# S5K5E9: fill the size tables the HAL reads for camera 2 (ultra-wide)
+-			"$SIGSCAN" -p "60 0E 83 3D 69 A2 31 39 A1 04 00 54" -P "60 0E 83 3D 69 A2 31 39 B4 04 00 34" -f "$2"
+-			# S5K5E9: the focal length table holds the f-number, use the real focal length
+-			"$SIGSCAN" -p "CD CC 0C 40 CD CC 0C 40 00 00 00 00 CD CC 0C 40" -P "CD CC 0C 40 CD CC 0C 40 00 00 00 00 85 EB B1 3F" -f "$2"
+-		fi
+-		;;
+-	vendor/lib*/libsensorlistener.so)
+-		grep -q libshim_sensorndkbridge.so "$2" || "$PATCHELF" --add-needed "libshim_sensorndkbridge.so" "$2"
+-		;;
+-	vendor/bin/hw/rild | vendor/lib*/libsec-ril*.so)
+-		"$PATCHELF" --replace-needed libril.so libril-samsung.so "$2"
+-		;;
+-        vendor/lib/libaudio_soundtrigger.so | vendor/lib/libaudioroute.universal7904.so | vendor/lib/soundfx/libaudioeffectoffload.so)
+-		"$PATCHELF" --replace-needed libtinyalsa.so libtinyalsa.universal7904.so "$2"
+-		;;
+-	vendor/lib/hw/audio.primary.exynos7904.so)
+-		"$PATCHELF" --replace-needed libaudioroute.so libaudioroute.universal7904.so "$2"
+-		"$PATCHELF" --replace-needed libtinyalsa.so libtinyalsa.universal7904.so "$2"
+-		grep -q libshim_audioparams.so "$2" || "$PATCHELF" --add-needed libshim_audioparams.so "$2"
+-		sed -i 's/str_parms_get_str/str_parms_get_mod/g' "$2"
+-		;;
+-	vendor/lib/libwvhidl.so | vendor/lib/mediadrm/libwvdrmengine.so)
+-		"$PATCHELF" --replace-needed "libprotobuf-cpp-lite-3.9.1.so" "libprotobuf-cpp-full-3.9.1.so" "$2"
+-		grep -q libcrypto_shim.so "$2" || "$PATCHELF" --add-needed libcrypto_shim.so "$2"
+-		;;
+-	esac
+-}
+-
+-# Default to sanitizing the vendor folder before extraction
+-CLEAN_VENDOR=true
+-
+-ONLY_COMMON=
+-ONLY_TARGET=
+-SECTION=
+-KANG=
+-
+-while [ "${#}" -gt 0 ]; do
+-	case "${1}" in
+-	--only-common)
+-		ONLY_COMMON=true
+-		;;
+-	--only-target)
+-		ONLY_TARGET=true
+-		;;
+-	-n | --no-cleanup)
+-		CLEAN_VENDOR=false
+-		;;
+-	-k | --kang)
+-		KANG="--kang"
+-		;;
+-	-s | --section)
+-		SECTION="${2}"
+-		shift
+-		CLEAN_VENDOR=false
+-		;;
+-	*)
+-		SRC="${1}"
+-		;;
+-	esac
+-	shift
+-done
+-
+-if [ -z "${SRC}" ]; then
+-	SRC="adb"
+-fi
+-
+-# Initialize the helper for common device
+-if [ -z "${ONLY_TARGET}" ]; then
+-	# Initialize the helper for common device
+-	setup_vendor "${DEVICE_COMMON}" "${VENDOR}" "${LINEAGE_ROOT}" true "${CLEAN_VENDOR}"
+-
+-	extract "${MY_DIR}/proprietary-files.txt" "${SRC}" \
+-		"${KANG}" --section "${SECTION}"
+-fi
+-
+-if [ -z "${ONLY_COMMON}" ] && [ -s "${MY_DIR}/../${DEVICE}/proprietary-files.txt" ]; then
+-	# Reinitialize the helper for device
+-	source "${MY_DIR}/../${DEVICE}/extract-files.sh"
+-	setup_vendor "${DEVICE}" "${VENDOR}" "${LINEAGE_ROOT}" false "${CLEAN_VENDOR}"
+-
+-	extract "${MY_DIR}/../${DEVICE}/proprietary-files.txt" "${SRC}" \
+-		"${KANG}" --section "${SECTION}"
+-fi
+-
+-"${MY_DIR}/setup-makefiles.sh"
+diff --git a/setup-makefiles.py b/setup-makefiles.py
+new file mode 100755
+index 0000000..e75e199
+--- /dev/null
++++ b/setup-makefiles.py
+@@ -0,0 +1,5 @@
++#!./extract-files.py --regenerate_makefiles
++#
++# SPDX-FileCopyrightText: The LineageOS Project
++# SPDX-License-Identifier: Apache-2.0
++#
+diff --git a/setup-makefiles.sh b/setup-makefiles.sh
+deleted file mode 100755
+index 5cb259a..0000000
+--- a/setup-makefiles.sh
++++ /dev/null
+@@ -1,57 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (C) 2017-2020 The LineageOS Project
+-#
+-# SPDX-License-Identifier: Apache-2.0
+-#
+-
+-set -e
+-
+-INITIAL_COPYRIGHT_YEAR=2018
+-
+-# Load extract_utils and do some sanity checks
+-MY_DIR="${BASH_SOURCE%/*}"
+-if [[ ! -d ${MY_DIR} ]]; then MY_DIR="${PWD}"; fi
+-
+-LINEAGE_ROOT="${MY_DIR}/../../.."
+-
+-HELPER="${LINEAGE_ROOT}/tools/extract-utils/extract_utils.sh"
+-if [ ! -f "${HELPER}" ]; then
+-	echo "Unable to find helper script at ${HELPER}"
+-	exit 1
+-fi
+-source "${HELPER}"
+-
+-function vendor_imports() {
+-    printf '\t\t"device/samsung/universal7904-common",\n' >> "$1"
+-    printf '\t\t"hardware/samsung",\n' >> "$1"
+-    printf '\t\t"hardware/samsung_slsi-linaro/exynos",\n' >> "$1"
+-    printf '\t\t"hardware/samsung_slsi-linaro/graphics",\n' >> "$1"
+-}
+-
+-# Initialize the helper for common
+-setup_vendor "${DEVICE_COMMON}" "${VENDOR}" "${LINEAGE_ROOT}" true
+-
+-# Copyright headers and guards
+-write_headers "m20lte a40"
+-
+-# The standard common blobs
+-write_makefiles "${MY_DIR}/proprietary-files.txt" true
+-
+-# Finish
+-write_footers
+-
+-if [ -s "${MY_DIR}/../${DEVICE}/proprietary-files.txt" ]; then
+-	# Reinitialize the helper for device
+-	INITIAL_COPYRIGHT_YEAR="$DEVICE_BRINGUP_YEAR"
+-	setup_vendor "${DEVICE}" "${VENDOR}" "${LINEAGE_ROOT}" false
+-
+-	# Copyright headers and guards
+-	write_headers
+-
+-	# The standard device blobs
+-	write_makefiles "${MY_DIR}/../${DEVICE}/proprietary-files.txt" true
+-
+-	# Finish
+-	write_footers
+-fi
+-- 
+2.43.0
+

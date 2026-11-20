@@ -1,0 +1,31 @@
+From 25cf4d5615a4afb6d9544b654bbd6ecd583b0941 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 17:57:00 +0300
+Subject: [PATCH 2/2] config: exynos7885: Switch to the 5.10 kernel
+
+The only exynos7885 based device on lineage-24.0 (m20lte) now runs
+a 5.10 kernel.
+
+Assisted-by: LLM
+Change-Id: Ia628d393b699c9c2897854b3bf0c0a74d2446f90
+---
+ BoardConfig7885.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BoardConfig7885.mk b/BoardConfig7885.mk
+index a3a9745..1d35fe7 100644
+--- a/BoardConfig7885.mk
++++ b/BoardConfig7885.mk
+@@ -14,7 +14,7 @@
+ # limitations under the License.
+ #
+ 
+-TARGET_LINUX_KERNEL_VERSION := 4.4
++TARGET_LINUX_KERNEL_VERSION := 5.10
+ 
+ TARGET_SOC_BASE := exynos7885
+ 
+-- 
+2.43.0
+

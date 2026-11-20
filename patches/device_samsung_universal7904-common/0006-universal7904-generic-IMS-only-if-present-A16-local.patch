@@ -1,0 +1,22 @@
+From 79244cfcf8c2d16ba1f9fe35b33da85446b9f550 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?= <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 21:01:49 +0000
+Subject: [PATCH 6/8] universal7904: generic IMS only if present (A16 local)
+
+---
+ universal7904-common.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/universal7904-common.mk b/universal7904-common.mk
+index 9a58398..22e12f3 100644
+--- a/universal7904-common.mk
++++ b/universal7904-common.mk
+@@ -332,4 +332,4 @@ PRODUCT_COPY_FILES += \
+ PRODUCT_CFI_INCLUDE_PATHS += hardware/samsung_slsi/scsc_wifibt/wpa_supplicant_lib
+ 
+ # IMS
+-$(call inherit-product, hardware/lineage/generic-ims/ims.mk)
++$(call inherit-product-if-exists, hardware/lineage/generic-ims/ims.mk)
+-- 
+2.43.0
+

@@ -1,0 +1,25 @@
+From 6e4f1fefba8f1ca1a0ddb598998f8d5d25f8d476 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?= <umutcagand@protonmail.com>
+Date: Fri, 20 Nov 2026 00:33:08 +0000
+Subject: [PATCH] gms: allow disabling SUW quick start (local)
+
+---
+ products/gms.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/products/gms.mk b/products/gms.mk
+index 7f9ad27..193f33d 100644
+--- a/products/gms.mk
++++ b/products/gms.mk
+@@ -49,7 +49,7 @@ PRODUCT_PRODUCT_PROPERTIES += \
+     setupwizard.feature.is_suw_onboarding_contract_enabled=true \
+     setupwizard.feature.joined_up_loading=true \
+     setupwizard.feature.locale_agnostic_enabled=true \
+-    setupwizard.feature.enable_quick_start_flow=true \
++    setupwizard.feature.enable_quick_start_flow=$(if $(filter false,$(TARGET_SUW_QUICK_START)),false,true) \
+     setupwizard.feature.enable_restore_anytime=true \
+     setupwizard.feature.enable_wifi_tracker=true \
+     setupwizard.feature.lifecycle_refactoring=true \
+-- 
+2.43.0
+

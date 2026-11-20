@@ -1,0 +1,78 @@
+From 647e339d11f0b03adc912d208799504a69f63209 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 17:00:04 +0300
+Subject: [PATCH 5/8] universal7904: Use the exynos7904 platform config again
+
+hardware/samsung_slsi-linaro/config has BoardConfig7904.mk again.
+
+Assisted-by: LLM
+Change-Id: I97ad571c1ad78228ec9b76152ee392f9d275f5ca
+---
+ BoardConfigCommon.mk | 49 +-------------------------------------------
+ 1 file changed, 1 insertion(+), 48 deletions(-)
+
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index 91b0a6b..f1e0823 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -27,55 +27,8 @@ TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a53
+ # Must come before hwc.mk, which reads it into the HWC build
+ BOARD_MINIMUM_DISPLAY_BRIGHTNESS := 1
+ 
+-# Exynos 7904 platform config (dropped from hardware/samsung_slsi-linaro/config
+-# together with the 4.4 kernels, this device now runs 5.10)
+-TARGET_LINUX_KERNEL_VERSION := 5.10
+-TARGET_SOC_BASE := exynos7885
+-
+-BOARD_USES_EXYNOS_GRALLOC_VERSION := 3
+-BOARD_USES_ALIGN_RESTRICTION := true
+-BOARD_MFC_CHROMA_VALIGN := 32
+-BOARD_USES_EXYNOS_DATASPACE_FEATURE := true
+-
+-# Samsung OpenMAX Video
+-BOARD_USE_DMA_BUF := true
+-BOARD_USE_NON_CACHED_GRAPHICBUFFER := true
+-BOARD_USE_GSC_RGB_ENCODER := true
+-BOARD_USE_CSC_HW := true
+-BOARD_USE_S3D_SUPPORT := false
+-BOARD_USE_DEINTERLACING_SUPPORT := true
+-BOARD_USE_HEVCENC_SUPPORT := true
+-BOARD_USE_HEVC_HWIP := false
+-BOARD_USE_VP9DEC_SUPPORT := true
+-BOARD_USE_VP9ENC_SUPPORT := false
+-BOARD_USE_WFDENC_SUPPORT := false
+-BOARD_USE_CUSTOM_COMPONENT_SUPPORT := true
+-BOARD_USE_VIDEO_EXT_FOR_WFD_HDCP := true
+-BOARD_USE_SINGLE_PLANE_IN_DRM := true
+-BOARD_USE_WA_ION_BUF_REF := true
+-
+-# HWComposer
+-BOARD_HWC_VERSION := hwc3
+-TARGET_USES_HWC2 := true
+-HWC_SKIP_VALIDATE := true
+-BOARD_USES_HWC_SERVICES := false
+-
+-# Scaler
+-BOARD_USES_LEGACY_LIBSCALER := true
+-BOARD_USES_DEFAULT_CSC_HW_SCALER := true
+-BOARD_DEFAULT_CSC_HW_SCALER := 4
+-BOARD_USES_SCALER_M2M1SHOT := true
+-BOARD_HAS_SCALER_ALIGN_RESTRICTION := true
+-
+-# LIBHWJPEG
+-TARGET_USES_UNIVERSAL_LIBHWJPEG := true
+-
+-# Acryl
+-BOARD_LIBACRYL_DEFAULT_COMPOSITOR := fimg2d_8895
+-BOARD_LIBACRYL_DEFAULT_SCALER := mscl_9810
+-
+ # Must come after TARGET_ARCH, hwc.mk checks it to pick 64-bit DECON addresses
+-include hardware/samsung_slsi-linaro/config/BoardConfigCommon.mk
++include hardware/samsung_slsi-linaro/config/BoardConfig7904.mk
+ 
+ # Gralloc: HEVC encoder chroma alignment
+ $(call soong_config_set,arm_gralloc,MFC_CHROMA_VALIGN,$(BOARD_MFC_CHROMA_VALIGN))
+-- 
+2.43.0
+

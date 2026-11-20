@@ -1,0 +1,29 @@
+From 940fba81bb8eb7e51e749f31dd2dacaec7765e3e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?= <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 22:44:46 +0000
+Subject: [PATCH 2/5] m20lte: Lunaris flags gms=true (local)
+
+---
+ lineage_m20lte.mk | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/lineage_m20lte.mk b/lineage_m20lte.mk
+index 8d28e84..d630839 100644
+--- a/lineage_m20lte.mk
++++ b/lineage_m20lte.mk
+@@ -4,3 +4,12 @@ $(call inherit-product, device/samsung/m20lte/full_m20lte.mk)
+ $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
+ 
+ PRODUCT_NAME := lineage_m20lte
++
++# Lunaris
++WITH_GMS := true
++WITH_GMS_COMMS_SUITE := false
++WITH_PIXEL_LAUNCHER := false
++TARGET_USE_MAPS := false
++TARGET_USE_GPHOTOS := false
++TARGET_USE_WALLPAPERS := false
++PRODUCT_SYSTEM_PROPERTIES += ro.lunaris.maintainer=umutcagand
+-- 
+2.43.0
+

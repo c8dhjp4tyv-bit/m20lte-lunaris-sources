@@ -1,0 +1,35 @@
+From 19f3e09eca3b2ca4d8930a30787471af9195e7fe Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 02:12:26 +0300
+Subject: [PATCH 1/8] universal7904: Build libhwjpeg with the Samsung legacy
+ V4L2 layout
+
+Photo capture froze: the camera HAL wrote the JPEG size and format
+at Samsung UAPI offsets that the upstream-layout libhwjpeg did not read.
+Needs the HWJPEG_SAMSUNG_LEGACY_V4L2 switch in libhwjpeg merged first.
+
+Assisted-by: LLM
+Change-Id: Icddea47a0557a7ae1039c1bac373d8ea3301baaf
+---
+ BoardConfigCommon.mk | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index 568e85e..269a635 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -83,6 +83,10 @@ $(call soong_config_set,arm_gralloc,MFC_CHROMA_VALIGN,$(BOARD_MFC_CHROMA_VALIGN)
+ # Gralloc: allow mapper 2.x
+ $(call soong_config_set_bool,libui,legacy_gralloc,true)
+ 
++# libexynoscamera3 inlines libhwjpeg accessors built with the Samsung
++# 17-plane V4L2 UAPI
++$(call soong_config_set_bool,libhwjpeg,HWJPEG_SAMSUNG_LEGACY_V4L2,true)
++
+ # AVB (only needed for signing)
+ BOARD_AVB_ENABLE := false
+ 
+-- 
+2.43.0
+

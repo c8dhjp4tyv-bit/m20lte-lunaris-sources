@@ -1,0 +1,63 @@
+From 1d2849fc43069ab44bb2b9e86955a2e3e0760bba Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Thu, 19 Nov 2026 08:54:00 +0300
+Subject: [PATCH 2/2] libcomparetf2: Add the remaining long double comparisons
+
+Android 17 libc no longer exports these compiler-rt helpers; Samsung's
+libOpenCv.camera.samsung imports __eqtf2, __netf2, __letf2, __gttf2
+and __unordtf2 next to __lttf2. __getf2 is added for completeness.
+The shim assumes a 128-bit IEEE long double, so build it for arm64 only.
+
+Assisted-by: LLM
+Change-Id: I3aa83783a15650f7b7aed0a3cadfb5bb7dff0384
+---
+ Android.bp                 |  7 +++++++
+ libcomparetf2/comparetf2.c | 16 ++++++++++++++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/Android.bp b/Android.bp
+index 0c86695..6db6e9b 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -692,6 +692,13 @@ cc_library_shared {
+     srcs: ["libcomparetf2/comparetf2.c"],
+     compile_multilib: "64",
+     vendor: true,
++    // Assumes 128-bit IEEE long double (arm64 only)
++    enabled: false,
++    arch: {
++        arm64: {
++            enabled: true,
++        },
++    },
+ }
+ 
+ cc_prebuilt_library_shared {
+diff --git a/libcomparetf2/comparetf2.c b/libcomparetf2/comparetf2.c
+index e725133..fa04b20 100644
+--- a/libcomparetf2/comparetf2.c
++++ b/libcomparetf2/comparetf2.c
+@@ -69,3 +69,19 @@ enum LE_RESULT __lttf2(fp_t a, fp_t b) {
+       return LE_GREATER;
+   }
+ }
++
++enum LE_RESULT __letf2(fp_t a, fp_t b) __attribute__((alias("__lttf2")));
++enum LE_RESULT __eqtf2(fp_t a, fp_t b) __attribute__((alias("__lttf2")));
++enum LE_RESULT __netf2(fp_t a, fp_t b) __attribute__((alias("__lttf2")));
++
++int __unordtf2(fp_t a, fp_t b) {
++  return (toRep(a) & absMask) > infRep || (toRep(b) & absMask) > infRep;
++}
++
++int __gttf2(fp_t a, fp_t b) {
++  if (__unordtf2(a, b))
++    return -1;
++  return __lttf2(a, b);
++}
++
++int __getf2(fp_t a, fp_t b) __attribute__((alias("__gttf2")));
+-- 
+2.43.0
+
