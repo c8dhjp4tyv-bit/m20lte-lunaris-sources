@@ -47,3 +47,5 @@ GMS by default. Vanilla: set `WITH_GMS := false` in `device/samsung/m20lte/linea
 | `hardware_samsung_slsi-linaro_config` | config: exynos7885: Switch to the 5.10 kernel |
 | `hardware_samsung_slsi-linaro_graphics` | libhwjpeg: Optionally build against Samsung's legacy V4L2 |
 | `vendor_pixel_gms` | gms: allow disabling SUW quick start (local) |
+| `device_samsung_m20lte` | m20lte: stop the renamed NFC HAL on A16 (local) |
+| `vendor_pixel_gms` | gms: drop the Pixel Instant Hotspot service (local) |

@@ -1,0 +1,30 @@
+From 1a4524ad830dee70ed130eb4737258a47d59bdb0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?=
+ <umutcagand@protonmail.com>
+Date: Fri, 20 Nov 2026 19:58:30 +0000
+Subject: [PATCH] gms: drop the Pixel Instant Hotspot service (local)
+
+SystemUI binds com.google.android.gms magictether on boot, gets
+"Service without Chimera impl" and crashes in setup on m20lte.
+---
+ .../overlay/GoogleConfigOverlay_GMS/res/values/config.xml       | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/common/proprietary/product/overlay/GoogleConfigOverlay_GMS/res/values/config.xml b/common/proprietary/product/overlay/GoogleConfigOverlay_GMS/res/values/config.xml
+index 82c43a2..b95ce40 100644
+--- a/common/proprietary/product/overlay/GoogleConfigOverlay_GMS/res/values/config.xml
++++ b/common/proprietary/product/overlay/GoogleConfigOverlay_GMS/res/values/config.xml
+@@ -156,10 +156,8 @@
+     </string-array>
+ 
+     <!-- Package name of the system service that implements the shared connectivity service -->
+-    <string name="config_sharedConnectivityServicePackage" translatable="false">com.google.android.gms</string>
+ 
+     <!-- Intent action used when binding to the shared connectivity service -->
+-    <string name="config_sharedConnectivityServiceIntentAction" translatable="false">com.google.android.gms.magictether.BIND</string>
+ 
+     <!-- The system and settings UI can support all the features of instant tether. If set to false,
+      instant tether will run in notifications mode -->
+-- 
+2.43.0
+

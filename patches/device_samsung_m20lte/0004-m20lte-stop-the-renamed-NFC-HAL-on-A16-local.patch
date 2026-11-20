@@ -1,0 +1,30 @@
+From a50deefe52fc5962c7cb4a8da80d084f0c67a551 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Umut=20=C3=87a=C4=9Fan=20Demirer?= <umutcagand@protonmail.com>
+Date: Fri, 20 Nov 2026 01:38:21 +0000
+Subject: [PATCH] m20lte: stop the renamed NFC HAL on A16 (local)
+
+---
+ rootdir/etc/init.target.rc | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/rootdir/etc/init.target.rc b/rootdir/etc/init.target.rc
+index 1b3e15e..ac7d114 100644
+--- a/rootdir/etc/init.target.rc
++++ b/rootdir/etc/init.target.rc
+@@ -11,6 +11,13 @@ on init && property:ro.product.device=m20lte && property:ro.boot.product.hardwar
+ on property:init.svc.nfc_hal_service=* && property:ro.product.device=m20lte && property:ro.boot.product.hardware.sku=
+     stop nfc_hal_service
+ 
++# A16 renamed the Samsung NFC HAL service
++on init && property:ro.product.device=m20lte && property:ro.boot.product.hardware.sku=
++    stop vendor.samsung_nfc_hal_service
++
++on property:init.svc.vendor.samsung_nfc_hal_service=* && property:ro.product.device=m20lte && property:ro.boot.product.hardware.sku=
++    stop vendor.samsung_nfc_hal_service
++
+ on boot
+     # Permissions for NAD
+     symlink /dev/block/platform/13500000.dwmmc0/by-name/NAD_REFER /dev/block/NAD_REFER
+-- 
+2.43.0
+
